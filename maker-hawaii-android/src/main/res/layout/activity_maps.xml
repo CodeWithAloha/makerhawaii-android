@@ -4,26 +4,35 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    <FrameLayout
+    <RelativeLayout
         android:id="@+id/top_bar"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         >
-        <TextView
+        <EditText
+            android:id="@+id/search_field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_margin="12dp"
-            android:text="Maker Hawaii"
+            android:padding="12dp"
+            android:hint="Search"
+            android:imeOptions="actionSearch"
+            android:textSize="12dp"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/button"
+            android:inputType="text"
+            android:cursorVisible="true"
+            android:textCursorDrawable="@null"
             />
         <Button
             android:id="@+id/button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="list"
-            android:layout_gravity="right|center_vertical"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
             />
-    </FrameLayout>
+    </RelativeLayout>
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -44,5 +53,33 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         </android.support.v7.widget.RecyclerView>
+    </RelativeLayout>
+    <RelativeLayout
+        android:id="@+id/search_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="#FFFFFFFF"
+        >
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@+id/search_close_button"
+            android:text="Search Results"
+            />
+        <TextView
+            android:id="@+id/search_close_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="X"
+            android:padding="16dp"
+            />
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/search_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/search_close_button"
+            />
     </RelativeLayout>
 </RelativeLayout>
