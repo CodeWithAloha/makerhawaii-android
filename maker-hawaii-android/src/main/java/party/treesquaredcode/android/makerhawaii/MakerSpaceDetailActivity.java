@@ -11,25 +11,6 @@ import android.widget.TextView;
  */
 public class MakerSpaceDetailActivity extends Activity {
 
-    /**
-     *
-     @Expose
-     private String website;
-     @Expose
-     private Location location;
-     @Expose
-     @SerializedName("post_title")
-     private String name;
-     @Expose
-     @SerializedName("howtovisit")
-     private String howToVisit;
-     @Expose
-     @SerializedName("membership_info")
-     private String membershipInfo;
-     @Expose
-     private String classes;
-     *
-     * */
     public static final String NAME_EXTRA_ID = "name";
     public static final String ADDRESS_EXTRA_ID = "address";
     public static final String CLASSES_EXTRA_ID = "classes";
@@ -42,14 +23,21 @@ public class MakerSpaceDetailActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
-        String name = intent.getStringExtra(NAME_EXTRA_ID);
+        final String name = intent.getStringExtra(NAME_EXTRA_ID);
         String address = intent.getStringExtra(ADDRESS_EXTRA_ID);
         String classes = intent.getStringExtra(CLASSES_EXTRA_ID);
         String howToVisit = intent.getStringExtra(HOW_TO_VISIT_EXTRA_ID);
         String membershipInfo = intent.getStringExtra(MEMBERSHIP_INFO_EXTRA_ID);
-        String website = intent.getStringExtra(WEBSITE_EXTRA_ID);
+        final String website = intent.getStringExtra(WEBSITE_EXTRA_ID);
 
         setContentView(R.layout.activity__maker_space_detail_activity);
+
+        findViewById(R.id.maker_space_detail_activity__back).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
 
         ((TextView) findViewById(R.id.maker_space_detail_activity__name)).setText(name);
 
@@ -81,6 +69,16 @@ public class MakerSpaceDetailActivity extends Activity {
             findViewById(R.id.maker_space_detail_activity__website_container).setVisibility(View.GONE);
         } else {
             ((TextView) findViewById(R.id.maker_space_detail_activity__website)).setText(website);
+            findViewById(R.id.maker_space_detail_activity__share).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Intent.ACTION_SEND);
+                    intent.setType("text/plain");
+                    intent.putExtra(Intent.EXTRA_TITLE, name);
+                    intent.putExtra(Intent.EXTRA_TEXT, website);
+                    startActivity(Intent.createChooser(intent, "Share"));
+                }
+            });
         }
     }
 }
