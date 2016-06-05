@@ -12,10 +12,14 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -57,16 +61,55 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     Marker lastMarker;
 
+    View searchContainer;
+
     List<MakerSpaceWithProximity> makerSpaceWithProximityList = new ArrayList<>();
+    List<MakerSpaceWithProximity> searchResultList = new ArrayList<>();
+
+    SearchAdapter searchAdapter;
+    RecyclerView searchRecyclerView;
+
+    EditText searchField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        searchContainer = findViewById(R.id.search_container);
+        searchAdapter = new SearchAdapter();
+        searchRecyclerView = (RecyclerView) findViewById(R.id.search_recycler_view);
+        searchRecyclerView.setLayoutManager(new LinearLayoutManager(null, LinearLayoutManager.VERTICAL, false));
+        searchRecyclerView.setAdapter(searchAdapter);
+        findViewById(R.id.search_close_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideSearch();
+            }
+        });
+
         mapViewContainer = findViewById(R.id.map);
         listViewContainer = findViewById(R.id.list_container);
         button = (Button) findViewById(R.id.button);
+
+        searchField = (EditText) findViewById(R.id.search_field);
+
+        searchField.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    showSearch(searchField.getText().toString());
+                    View view = MapsActivity.this.getCurrentFocus();
+                    if (view != null) {
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    }
+                    return true;
+
+                }
+                return false;
+            }
+        });
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -385,6 +428,86 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } catch (NumberFormatException e) {
 
             }
+        }
+    }
+
+    List<MakerSpaceWithProximity> filteredSpaces(List<MakerSpaceWithProximity> makerSpaceWithProximityList, String query) {
+        String[] queryWords = query.split("\\s");
+        List<MakerSpaceWithProximity> result = new ArrayList<>();
+        if (queryWords.length == 0) {
+            return result;
+        }
+        for (MakerSpaceWithProximity makerSpaceWithProximity : makerSpaceWithProximityList) {
+            String normName = makerSpaceWithProximity.makerSpace.getName().toLowerCase();
+            boolean matches = false;
+            for (String queryWord : queryWords) {
+                if (normName.contains(queryWord.toLowerCase())) {
+                    matches = true;
+                }
+            }
+            if (matches) {
+                result.add(makerSpaceWithProximity);
+            }
+        }
+        return result;
+    }
+
+    void hideSearch() {
+        searchContainer.setVisibility(View.GONE);
+    }
+
+    void showSearch(String searchQuery) {
+        searchContainer.setVisibility(View.VISIBLE);
+        searchResultList = filteredSpaces(makerSpaceWithProximityList, searchQuery);
+        searchAdapter.notifyDataSetChanged();
+    }
+
+    class SearchViewHolder extends RecyclerView.ViewHolder {
+        MakerSpaceWithProximity makerSpaceWithProximity;
+        TextView titleText;
+        TextView proximityText;
+
+        public SearchViewHolder(View itemView) {
+            super(itemView);
+            titleText = (TextView) itemView.findViewById(R.id.title_text);
+            proximityText = (TextView) itemView.findViewById(R.id.proximity_text);
+            itemView.findViewById(R.id.detail_text).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    hideSearch();
+                    showMakerSpaceDetail(makerSpaceWithProximity.makerSpace);
+                }
+            });
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    hideSearch();
+                    showMapAtMakerSpaceWithLatLng(makerSpaceWithProximity.makerSpace, makerSpaceWithProximity.lat, makerSpaceWithProximity.lng);
+                }
+            });
+        }
+
+        void bind(MakerSpaceWithProximity makerSpaceWithProximity) {
+            this.makerSpaceWithProximity = makerSpaceWithProximity;
+            titleText.setText(makerSpaceWithProximity.makerSpace.getName());
+            proximityText.setText(Formatting.distanceString(makerSpaceWithProximity.proximity));
+        }
+    }
+
+    class SearchAdapter extends RecyclerView.Adapter<SearchViewHolder> {
+        @Override
+        public SearchViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            return new SearchViewHolder(LayoutInflater.from(MapsActivity.this).inflate(R.layout.layout__list_row, parent, false));
+        }
+
+        @Override
+        public void onBindViewHolder(SearchViewHolder holder, int position) {
+            holder.bind(searchResultList.get(position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return searchResultList.size();
         }
     }
 }
